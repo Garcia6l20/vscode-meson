@@ -4,6 +4,25 @@ import { randomString, isThenable } from "../../utils";
 import { DirectoryNode, TargetSourceFileNode } from "./sources";
 import { BaseNode } from "../basenode";
 
+
+export class FileNode extends BaseNode {
+  constructor(public readonly root: string, public readonly name: string) {
+    super(name + randomString());
+  }
+
+  getTreeItem() {
+    const item = super.getTreeItem() as vscode.TreeItem;
+    item.resourceUri = vscode.Uri.file(path.join(this.root, this.name));
+    item.label = path.basename(this.name);
+    item.command = {
+      command: "vscode.open",
+      title: "Open file",
+      arguments: [item.resourceUri]
+    };
+    return item;
+  }
+}
+
 export abstract class BaseDirectoryNode<T> extends BaseNode {
   subfolders: Thenable<Map<string, T[]>>;
 

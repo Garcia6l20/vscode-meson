@@ -9,6 +9,7 @@ import { TestNode } from "./tests";
 import { pathToFileURL } from "url";
 import * as path from 'path';
 import { gExtManager } from "../../extension";
+import { FileNode } from "./base";
 
 function getProjectName(project: BaseProject) {
   let name = project.descriptive_name;
@@ -16,24 +17,6 @@ function getProjectName(project: BaseProject) {
     name += ` (${project.version})`;
   }
   return name;
-}
-
-export class FileNode extends BaseNode {
-  constructor(public readonly root: string, public readonly name: string) {
-    super(name + randomString());
-  }
-
-  getTreeItem() {
-    const item = super.getTreeItem() as vscode.TreeItem;
-    item.resourceUri = vscode.Uri.file(path.join(this.root, this.name));
-    item.label = path.basename(this.name);
-    item.command = {
-      command: "vscode.open",
-      title: "Open file",
-      arguments: [item.resourceUri]
-    };
-    return item;
-  }
 }
 
 export class ProjectNode extends BaseNode {
