@@ -5,7 +5,7 @@ import { Test } from "../../meson/types";
 import { extensionRelative } from "../../utils";
 
 export class TestNode extends BaseNode {
-  constructor(private readonly test: Test) {
+  constructor(public readonly test: Test) {
     super(test.name);
   }
 

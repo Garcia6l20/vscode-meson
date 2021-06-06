@@ -1,4 +1,5 @@
 import * as path from "path";
+import { types } from "util";
 import { workspace } from "vscode";
 import { exec, parseJSONFileIfExists, extensionConfiguration, resolveSymlinkPath } from "../utils";
 import {
@@ -12,16 +13,20 @@ import {
 
 const MESON_VERSION_REGEX = /^(\d+)\.(\d+)\.(\d+)/g;
 
-export async function getMesonTargets(build: string) {
-  let parsed = await parseJSONFileIfExists<Targets>(
-    path.join(build, "meson-info/intro-targets.json")
+async function introspect<T>(t: string, build: string) {
+  const parsed = await parseJSONFileIfExists<T>(
+    path.join(build, `meson-info/intro-${t}.json`)
   );
-  if (!parsed) {
-    const { stdout } = await exec(`${extensionConfiguration("mesonPath")} introspect --targets`, {
-      cwd: build
-    });
-    parsed = JSON.parse(stdout) as Targets;
+  if (parsed) {
+    return parsed;
+  } else {
+    const { stdout } = await exec(`${extensionConfiguration("mesonPath")} introspect --${t}`, { cwd: build });
+    return JSON.parse(stdout) as T;
   }
+}
+
+export async function getMesonTargets(build: string) {
+  let parsed = await introspect<Targets>("targets", build);
 
   if (getMesonVersion()[1] < 50) {
     return parsed.map(t => {
@@ -45,58 +50,29 @@ export async function getMesonTargets(build: string) {
   });
   return parsed;
 }
-export async function getMesonBuildOptions(build: string) {
-  const parsed = await parseJSONFileIfExists<BuildOptions>(
-    path.join(build, "meson-info/intro-buildoptions.json")
-  );
-  if (parsed) return parsed;
 
-  const { stdout } = await exec(`${extensionConfiguration("mesonPath")} introspect --buildoptions`, {
-    cwd: build
-  });
-  return JSON.parse(stdout) as BuildOptions;
+export async function getMesonExecutables(build: string) {
+  return (await getMesonTargets(build)).filter(t => { return t.type == "executable"; });
+}
+
+export async function getMesonBuildOptions(build: string) {
+  return introspect<BuildOptions>("buildoptions", build);
 }
 
 export async function getMesonProjectInfo(build: string) {
-  const parsed = await parseJSONFileIfExists<ProjectInfo>(
-    path.join(build, "meson-info/intro-projectinfo.json")
-  );
-  if (parsed) return parsed;
-  const { stdout } = await exec(`${extensionConfiguration("mesonPath")} introspect --project-info`, {
-    cwd: build
-  });
-  return JSON.parse(stdout) as ProjectInfo;
+  return introspect<ProjectInfo>("projectinfo", build);
 }
 
 export async function getMesonDependencies(build: string) {
-  const parsed = parseJSONFileIfExists<Dependencies>(
-    path.join(build, "meson-info/intro-dependencies.json")
-  );
-  if (parsed) return parsed;
-
-  const { stdout } = await exec(`${extensionConfiguration("mesonPath")} introspect --dependencies`, {
-    cwd: build
-  });
-  return JSON.parse(stdout) as Dependencies;
+  return introspect<Dependencies>("dependencies", build);
 }
+
 export async function getMesonTests(build: string) {
-  const parsed = await parseJSONFileIfExists<Tests>(
-    path.join(build, "meson-info/intro-tests.json")
-  );
-  if (parsed) return parsed;
-  const { stdout } = await exec(`${extensionConfiguration("mesonPath")} introspect --tests`, { cwd: build });
-  return JSON.parse(stdout) as Tests;
+  return await introspect<Tests>("tests", build);
 }
-export async function getMesonBenchmarks(build: string) {
-  const parsed = await parseJSONFileIfExists<Tests>(
-    path.join(build, "meson-info/intro-benchmarks.json")
-  );
-  if (parsed) return parsed;
 
-  const { stdout } = await exec(`${extensionConfiguration("mesonPath")} introspect --benchmarks`, {
-    cwd: build
-  });
-  return JSON.parse(stdout) as Tests;
+export async function getMesonBenchmarks(build: string) {
+  return await introspect<Tests>("benchmarks", build);
 }
 
 export async function getMesonVersion(): Promise<[number, number, number]> {

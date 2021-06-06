@@ -35,11 +35,12 @@ export class MesonProjectDataProvider
 
 export class MesonProjectExplorer {
   private viewer: vscode.TreeView<BaseNode>;
+  public readonly treeDataProvider: MesonProjectDataProvider
 
   constructor(ctx: vscode.ExtensionContext, buildDir: string) {
-    const treeDataProvider = new MesonProjectDataProvider(ctx, buildDir);
+    this.treeDataProvider = new MesonProjectDataProvider(ctx, buildDir);
     this.viewer = vscode.window.createTreeView("meson-project", {
-      treeDataProvider
+      treeDataProvider: this.treeDataProvider
     });
   }
 

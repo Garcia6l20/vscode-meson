@@ -1,18 +1,28 @@
 import * as vscode from "vscode";
 
 import { BaseNode } from "../basenode";
-import { ProjectInfo, Subproject, Tests, Targets } from "../../meson/types";
+import { BaseProject, ProjectInfo, Subproject, Tests, Targets } from "../../meson/types";
 import { extensionRelative, hash } from "../../utils";
 import { TargetDirectoryNode, TargetNode } from "./targets";
 import { getMesonTargets, getMesonTests } from "../../meson/introspection";
 import { TestNode } from "./tests";
 
+function getProjectName(project : BaseProject) {
+  let name = project.descriptive_name;
+  if (project.version != "undefined") {
+    name += ` (${project.version})`;
+  }
+  return name;
+}
+
 export class ProjectNode extends BaseNode {
+
+
   constructor(
     private readonly project: ProjectInfo,
     private readonly buildDir: string
   ) {
-    super(project.descriptive_name + " " + project.version);
+    super(getProjectName(project));
   }
   getTreeItem() {
     const item = super.getTreeItem() as vscode.TreeItem;
@@ -84,6 +94,7 @@ export class TestRootNode extends BaseNode {
     item.label = "Tests";
     item.iconPath = extensionRelative("res/meson_32.svg");
     item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+    item.contextValue = "isTestRoot=true";
     return item;
   }
 
@@ -97,7 +108,7 @@ export class SubprojectNode extends BaseNode {
     private readonly subproject: Subproject,
     private readonly buildDir: string
   ) {
-    super(subproject.descriptive_name + " " + subproject.version);
+    super(getProjectName(subproject));
   }
 
   getTreeItem() {

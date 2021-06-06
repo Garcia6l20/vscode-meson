@@ -9,6 +9,10 @@ import {
 import { getTask } from "../tasks";
 import { relative } from "path";
 import { checkMesonIsConfigured } from "./utils";
+import * as cpt from 'vscode-cpptools';
+import { TargetNode } from "../treeview/nodes/targets";
+import { TestNode } from "../treeview/nodes/tests";
+import { TestRootNode } from "../treeview/nodes/toplevel";
 
 export async function runMesonConfigure(source: string, build: string) {
   return vscode.window.withProgress(
@@ -69,13 +73,18 @@ export async function runMesonReconfigure() {
   }
 }
 
-export async function runMesonBuild(buildDir: string, name?: string) {
-  let command = !!name ? `${extensionConfiguration("ninjaPath")} ${name}` : "ninja";
+export async function runMesonBuild(buildDir: string, target?: string | TargetNode) {
+
+  if (target instanceof TargetNode) {
+    target = await target.getFullTargetName();
+  }
+
+  let command = !!target ? `${extensionConfiguration("ninjaPath")} ${target}` : "ninja";
   const stream = execStream(command, { cwd: buildDir });
 
   return vscode.window.withProgress(
     {
-      title: name ? `Building target ${name}` : "Building project",
+      title: target ? `Building target ${target}` : "Building project",
       location: vscode.ProgressLocation.Notification,
       cancellable: true
     },
@@ -106,22 +115,47 @@ export async function runMesonBuild(buildDir: string, name?: string) {
   );
 }
 
-export async function runMesonTests(build: string, name?: string) {
+export async function runMesonTests(build: string, name?: string|TestNode|TestRootNode) {
   try {
-    if (name)
+    if (name && !(name instanceof TestRootNode)){
+      if (name instanceof TestNode) {
+        name = name.test.name;
+      }
       return await execAsTask(
         `${extensionConfiguration("mesonPath")} test ${name}`,
         { cwd: build },
         vscode.TaskRevealKind.Always
       );
+    } else {
+      return await execAsTask(
+        `${extensionConfiguration("ninjaPath")} test`,
+        { cwd: build },
+        vscode.TaskRevealKind.Always
+      );
+    }
+  } catch (e) {
+    if (e.stderr) {
+      vscode.window.showErrorMessage("Tests failed.");
+    }
+  }
+}
+
+export async function runMesonTarget(build: string, target?: string | TargetNode) {
+  if (!target) {
+    return;
+  }
+  if (target instanceof TargetNode) {
+    target = await target.getFullTargetName();
+  }
+  try {
     return await execAsTask(
-      `${extensionConfiguration("ninjaPath")} test`,
+      `${target}`,
       { cwd: build },
       vscode.TaskRevealKind.Always
     );
   } catch (e) {
     if (e.stderr) {
-      vscode.window.showErrorMessage("Tests failed.");
+      vscode.window.showErrorMessage("Error while running target.");
     }
   }
 }

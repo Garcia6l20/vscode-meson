@@ -54,8 +54,12 @@ export class TargetDirectoryNode extends BaseDirectoryNode<Target> {
 }
 
 export class TargetNode extends BaseNode {
-  constructor(private readonly target: Target) {
+  constructor(public readonly target: Target) {
     super(target.id);
+  }
+
+  async getFullTargetName() {
+    return getTargetName(this.target);
   }
 
   getChildren() {
@@ -85,6 +89,13 @@ export class TargetNode extends BaseNode {
       command: "mesonbuild.build",
       arguments: [getTargetName(this.target)]
     };
+    let canRun = this.target.type == "executable";
+
+    item.contextValue = [
+      `nodeType=target`,
+      `canBuild=true`,
+      `canRun=${canRun}`
+    ].join(',')
     return item;
   }
 

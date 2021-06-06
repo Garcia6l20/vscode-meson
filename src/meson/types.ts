@@ -46,14 +46,16 @@ export interface Target {
   install_filename?: string;
 }
 
-export interface Subproject {
+export interface BaseProject {
   name: string;
   version: string;
   descriptive_name: string;
 }
-export interface ProjectInfo {
-  version: string;
-  descriptive_name: string;
+
+export interface Subproject extends BaseProject {
+}
+
+export interface ProjectInfo extends BaseProject {
   subproject_dir: "subprojects";
   subprojects: Subproject[];
 }
