@@ -55,6 +55,10 @@ export async function getMesonExecutables(build: string) {
   return (await getMesonTargets(build)).filter(t => { return t.type == "executable"; });
 }
 
+export async function getMesonBuildFiles(build: string) {
+  return introspect<string[]>("buildsystem_files", build);
+}
+
 export async function getMesonBuildOptions(build: string) {
   return introspect<BuildOptions>("buildoptions", build);
 }

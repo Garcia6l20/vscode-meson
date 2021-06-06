@@ -2,12 +2,15 @@ import * as vscode from "vscode";
 
 import { BaseNode } from "../basenode";
 import { BaseProject, ProjectInfo, Subproject, Tests, Targets } from "../../meson/types";
-import { extensionRelative, hash } from "../../utils";
+import { extensionRelative, hash, randomString, resolveSymlinkPath } from "../../utils";
 import { TargetDirectoryNode, TargetNode } from "./targets";
-import { getMesonTargets, getMesonTests } from "../../meson/introspection";
+import { getMesonBuildFiles, getMesonTargets, getMesonTests } from "../../meson/introspection";
 import { TestNode } from "./tests";
+import { pathToFileURL } from "url";
+import * as path from 'path';
+import { gExtManager } from "../../extension";
 
-function getProjectName(project : BaseProject) {
+function getProjectName(project: BaseProject) {
   let name = project.descriptive_name;
   if (project.version != "undefined") {
     name += ` (${project.version})`;
@@ -15,8 +18,25 @@ function getProjectName(project : BaseProject) {
   return name;
 }
 
-export class ProjectNode extends BaseNode {
+export class FileNode extends BaseNode {
+  constructor(public readonly root: string, public readonly name: string) {
+    super(name + randomString());
+  }
 
+  getTreeItem() {
+    const item = super.getTreeItem() as vscode.TreeItem;
+    item.resourceUri = vscode.Uri.file(path.join(this.root, this.name));
+    item.label = path.basename(this.name);
+    item.command = {
+      command: "vscode.open",
+      title: "Open file",
+      arguments: [item.resourceUri]
+    };
+    return item;
+  }
+}
+
+export class ProjectNode extends BaseNode {
 
   constructor(
     private readonly project: ProjectInfo,
@@ -31,8 +51,17 @@ export class ProjectNode extends BaseNode {
     item.contextValue = "isRoot=true"
     return item;
   }
-  async getChildren() {
+  async getChildren() {    
+    const buildFiles = await (await getMesonBuildFiles(this.buildDir)).filter(p => {
+      p = path.dirname(resolveSymlinkPath(gExtManager.projectRoot, p));
+      return p == gExtManager.projectRoot;
+    }).map(p => {
+      return new FileNode(gExtManager.projectRoot, path.basename(p));
+    });
+
+
     return [
+      ...buildFiles,
       new SubprojectsRootNode(this.project.subprojects, this.buildDir),
       new TargetDirectoryNode(
         ".",

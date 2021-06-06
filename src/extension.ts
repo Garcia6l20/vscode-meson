@@ -33,7 +33,7 @@ class ExtensionManager implements vscode.Disposable {
   private readonly cppConfProvider = new CppConfigurationProvider();
   public readonly explorer?: MesonProjectExplorer
 
-  private readonly projectRoot: string
+  public readonly projectRoot: string
   private buildDir: string
 
   constructor(public readonly extensionContext: vscode.ExtensionContext) {
