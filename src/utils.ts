@@ -160,5 +160,6 @@ export function isThenable<T>(x: vscode.ProviderResult<T>): x is Thenable<T> {
 }
 
 export function resolveSymlinkPath(root, p) {
-  return path.join(root, path.relative(fs.realpathSync(root), p));
+  const rel = path.relative(fs.realpathSync(root), fs.realpathSync(p));
+  return path.join(root, rel);
 }

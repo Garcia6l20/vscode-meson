@@ -25,6 +25,7 @@ import {
 
 import { CppConfigurationProvider } from './cpptools';
 import * as cppt from 'vscode-cpptools';
+import { CodeModel } from "./codemodel";
 
 
 class ExtensionManager implements vscode.Disposable {
@@ -35,6 +36,8 @@ class ExtensionManager implements vscode.Disposable {
 
   public readonly projectRoot: string
   private buildDir: string
+
+  public readonly codeModel = new CodeModel()
 
   constructor(public readonly extensionContext: vscode.ExtensionContext) {
 
@@ -235,6 +238,11 @@ class ExtensionManager implements vscode.Disposable {
         );
       this.explorer.refresh();
     });
+
+    reg("targets-refresh", async () => {
+      await this.codeModel.update(this.projectRoot, this.buildDir);
+      await vscode.commands.executeCommand<boolean>("mesonbuild.view-refresh");
+    });
   }
 
   async onLoaded() {
@@ -292,14 +300,12 @@ class ExtensionManager implements vscode.Disposable {
    * Create the instance
    */
   static async create(context: vscode.ExtensionContext) {
-    const self = new ExtensionManager(context);
+    gExtManager = new ExtensionManager(context);
 
-    await self.registerTaskProvider();
-    await self.registerCommands();
-    await self.onLoaded();
+    await gExtManager.registerTaskProvider();
+    await gExtManager.registerCommands();
+    await gExtManager.onLoaded();
     // await self.registerCppToolsProvider();
-
-    return self;
   }
 
   /**
@@ -316,5 +322,5 @@ class ExtensionManager implements vscode.Disposable {
 export let gExtManager: ExtensionManager | null = null;
 
 export async function activate(ctx: vscode.ExtensionContext) {
-  const ext = gExtManager = await ExtensionManager.create(ctx);
+  await ExtensionManager.create(ctx);
 }

@@ -74,12 +74,14 @@ export interface Dependency {
 }
 export interface Test {
   name: string;
-  workdir: string | null;
+  workdir?: string;
   timeout: string;
   suite: string[];
   is_parallel: boolean;
   cmd: string[];
   env: Dict<string>;
+  priority?: number
+  depends?: string[];
 }
 
 export type Targets = Target[];
