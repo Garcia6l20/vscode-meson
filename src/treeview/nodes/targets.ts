@@ -86,11 +86,6 @@ export class TargetNode extends BaseNode {
     item.iconPath = extensionRelative(this.getIconPath());
     item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
     item.label = await getTargetName(this.target);
-    item.command = {
-      title: `Build ${this.target.name}`,
-      command: "mesonbuild.build",
-      arguments: [getTargetName(this.target)]
-    };
     let canRun = this.target.type == "executable";
 
     item.contextValue = [
