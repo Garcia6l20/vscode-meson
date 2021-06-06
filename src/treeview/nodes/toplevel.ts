@@ -28,6 +28,7 @@ export class ProjectNode extends BaseNode {
     const item = super.getTreeItem() as vscode.TreeItem;
     item.iconPath = extensionRelative("res/meson_32.svg");
     item.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+    item.contextValue = "isRoot=true"
     return item;
   }
   async getChildren() {

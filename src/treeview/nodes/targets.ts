@@ -4,8 +4,8 @@ import * as vscode from "vscode";
 import { BaseNode } from "../basenode";
 import { Target, Targets } from "../../meson/types";
 import { TargetSourcesNode, TargetGeneratedSourcesNode } from "./sources";
-import { extensionRelative, getTargetName } from "../../utils";
-import { BaseDirectoryNode } from "./base";
+import { extensionRelative, getTargetName, randomString, resolveSymlinkPath } from "../../utils";
+import { BaseDirectoryNode, BaseFileDirectoryNode } from "./base";
 
 export class TargetDirectoryNode extends BaseDirectoryNode<Target> {
   getTreeItem() {
@@ -53,6 +53,24 @@ export class TargetDirectoryNode extends BaseDirectoryNode<Target> {
   }
 }
 
+export class BuildFileNode extends BaseNode {
+  constructor(public readonly name: string) {
+    super(name + randomString());
+  }
+
+  getTreeItem() {
+    const item = super.getTreeItem() as vscode.TreeItem;
+    item.resourceUri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.path, this.name));
+    item.label = path.basename(this.name);
+    item.command = {
+      command: "vscode.open",
+      title: "Open file",
+      arguments: [item.resourceUri]
+    };
+    return item;
+  }
+}
+
 export class TargetNode extends BaseNode {
   constructor(public readonly target: Target) {
     super(target.id);
@@ -72,6 +90,7 @@ export class TargetNode extends BaseNode {
         sources.push(...s.generated_sources);
       }
       return [
+        new BuildFileNode(vscode.workspace.asRelativePath(this.target.defined_in)),
         new TargetSourcesNode(path.dirname(this.target.defined_in), sources),
         generated_sources.length > 0
           ? new TargetGeneratedSourcesNode(generated_sources)

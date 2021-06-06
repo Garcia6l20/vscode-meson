@@ -12,7 +12,7 @@ import { checkMesonIsConfigured } from "./utils";
 import * as cpt from 'vscode-cpptools';
 import { TargetNode } from "../treeview/nodes/targets";
 import { TestNode } from "../treeview/nodes/tests";
-import { TestRootNode } from "../treeview/nodes/toplevel";
+import { ProjectNode, TestRootNode } from "../treeview/nodes/toplevel";
 
 export async function runMesonConfigure(source: string, build: string) {
   return vscode.window.withProgress(
@@ -62,7 +62,7 @@ export async function runMesonConfigure(source: string, build: string) {
   );
 }
 
-export async function runMesonReconfigure() {
+export async function runMesonReconfigure(projecNode?: ProjectNode) {
   try {
     await vscode.tasks.executeTask(await getTask("reconfigure"));
   } catch (e) {
