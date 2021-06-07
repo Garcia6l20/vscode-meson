@@ -6,4 +6,5 @@ export interface ExtensionConfiguration {
   buildFolder: string;
   mesonPath: string;
   ninjaPath: string;
+  filepathWorkaround: boolean;
 }

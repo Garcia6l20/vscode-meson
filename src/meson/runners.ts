@@ -102,6 +102,14 @@ export async function runMesonBuild(buildDir: string, target?: TargetLike) {
   let command = `${extensionConfiguration("ninjaPath")} ${name}`;
   const stream = execStream(command, { cwd: buildDir });
 
+  function escapeRegExp(text) {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+  }
+
+  const pathToProjectRoot = path.relative(buildDir, gExtManager.projectRoot);
+  const pathPatten = new RegExp(escapeRegExp(pathToProjectRoot) + '\\/([^:]+)', 'gm');
+  const filepathWorkaround = extensionConfiguration("filepathWorkaround");
+
   return vscode.window.withProgress(
     {
       title: `Building target ${name}`,
@@ -118,6 +126,9 @@ export async function runMesonBuild(buildDir: string, target?: TargetLike) {
           const increment = percentage - oldPercentage;
           oldPercentage = percentage;
           if (increment > 0) progress.report({ increment, message: match[3] });
+        }
+        if (filepathWorkaround) {
+          msg = msg.replace(pathPatten, gExtManager.projectRoot + '/$1');
         }
         getOutputChannel().append(msg);
         if (isError) getOutputChannel().show(true);
