@@ -284,7 +284,24 @@
           "group": "Meson::run"
         }
       ]
-    }
+    },
+    "keybindings": [
+      {
+        "key": "f7",
+        "when": "inMesonProject",
+        "command": "mesonbuild.build"
+      },
+      {
+        "key": "f5",
+        "command": "mesonbuild.debug",
+        "when": "!inDebugMode && inMesonProject"
+      },
+      {
+        "key": "shift+f5",
+        "command": "mesonbuild.run",
+        "when": "!inDebugMode && inMesonProject"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -298,7 +315,7 @@
   },
   "dependencies": {
     "array-flat-polyfill": "^1.0.1",
-    "vsce": "^1.92.0",
+    "vsce": "^1.93.0",
     "vscode-cpptools": "^5.0.0"
   },
   "extensionDependencies": [

@@ -218,6 +218,8 @@ class ExtensionManager implements vscode.Disposable {
     await gExtManager.registerCommands();
     await gExtManager.onLoaded();
     // await gExtManager.registerCppToolsProvider();
+
+    vscode.commands.executeCommand("setContext", "inMesonProject", true);
   }
 
   /**
