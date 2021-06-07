@@ -10,6 +10,7 @@ export class MesonProjectDataProvider
   readonly onDidChangeTreeData = this._onDataChangeEmitter.event;
 
   private projectStructure?: ProjectStructure
+  private projectNode?: ProjectNode
 
   constructor(ctx: vscode.ExtensionContext, private buildDir: string) {
     ctx.subscriptions.push(
@@ -27,14 +28,18 @@ export class MesonProjectDataProvider
   getTreeItem(element: BaseNode) {
     return element.getTreeItem();
   }
-  
+
   async getChildren(element?: BaseNode) {
-    if (element) return element.getChildren();
+    if (element) {
+      return element.getChildren();
+    }
     if (!this.projectStructure) {
       return []
+    } else if (!this.projectNode) {
+      this.projectNode = new ProjectNode(this.projectStructure.root);
     }
     return [
-      new ProjectNode(this.projectStructure.root)
+      this.projectNode,
     ];
   }
 }

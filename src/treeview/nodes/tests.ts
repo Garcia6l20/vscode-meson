@@ -6,7 +6,7 @@ import { extensionRelative, randomString } from "../../utils";
 
 export class TestNode extends BaseNode {
   constructor(public readonly test: Test) {
-    super(test.name);
+    super(test.name + randomString());
   }
 
   getChildren() {
@@ -20,7 +20,7 @@ export class TestNode extends BaseNode {
     item.command = {
       title: "Run test",
       command: "mesonbuild.test",
-      arguments: [this.test.name]
+      arguments: [this.test]
     };
 
     return item;

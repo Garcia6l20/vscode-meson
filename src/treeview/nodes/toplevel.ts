@@ -1,14 +1,10 @@
 import * as vscode from "vscode";
 
 import { BaseNode } from "../basenode";
-import { BaseProject, ProjectInfo, Subproject, Tests, Targets } from "../../meson/types";
-import { extensionRelative, hash, randomString, resolveSymlinkPath } from "../../utils";
+import { BaseProject, Tests, Targets } from "../../meson/types";
+import { extensionRelative, hash, randomString } from "../../utils";
 import { TargetDirectoryNode, TargetNode } from "./targets";
-import { getMesonBuildFiles, getMesonTargets, getMesonTests } from "../../meson/introspection";
 import { TestNode } from "./tests";
-import { pathToFileURL } from "url";
-import * as path from 'path';
-import { gExtManager } from "../../extension";
 import { FileNode } from "./base";
 import { ProjectModel } from "../../project";
 
@@ -35,17 +31,19 @@ export class ProjectNode extends BaseNode {
     return item;
   }
   async getChildren() {    
-    const buildFileNode = FileNode.create(this.project.buildFile);
-    
-    return [
-      buildFileNode,
-      new SubprojectsRootNode(this.project.subprojects),
-      new TargetDirectoryNode(
-        ".",
-        this.project.targets
-      ),
-      new TestRootNode([...this.project.allTests, ...this.project.allBenchmarks])
-    ];
+    let children:BaseNode[] = [FileNode.create(this.project.buildFile)];
+    if (this.project.subprojects && this.project.subprojects.length) {
+      children.push(new SubprojectsRootNode(this.project.subprojects));
+    }
+    if (this.project.targets && this.project.targets.length) {
+      // const relPath = path.relative(gExtManager.projectRoot, this.project.sourceDir);
+      children.push(new TargetsRootNode(this.project.targets));
+    }
+    const tests = [...this.project?.allTests, ...this.project?.allBenchmarks];
+    if (tests.length) {
+      children.push(new TestRootNode(tests))
+    }
+    return children;
   }
 }
 
@@ -63,12 +61,13 @@ export class SubprojectsRootNode extends BaseNode {
     item.label = "Subprojects";
     item.iconPath = extensionRelative("res/icon-subprojects.svg");
     item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-
     return item;
   }
 
   getChildren() {
-    return this.subprojects.map(s => new SubprojectNode(s));
+    return this.subprojects.map(s => {
+      return new ProjectNode(s);
+    });
   }
 }
 
@@ -92,7 +91,7 @@ export class TargetsRootNode extends BaseNode {
 
 export class TestRootNode extends BaseNode {
   constructor(private readonly tests: Tests) {
-    super(hash(tests.map(t => t.suite + t.name).join(";")));
+    super(hash(tests.map(t => t.suite + t.name).join(";")) + randomString());
   }
 
   getTreeItem() {

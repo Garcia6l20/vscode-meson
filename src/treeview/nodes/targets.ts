@@ -4,7 +4,7 @@ import * as vscode from "vscode";
 import { BaseNode } from "../basenode";
 import { Target, Targets } from "../../meson/types";
 import { TargetSourcesNode, TargetGeneratedSourcesNode } from "./sources";
-import { extensionRelative, getTargetName, randomString, resolveSymlinkPath } from "../../utils";
+import { extensionRelative, getTargetName } from "../../utils";
 import { BaseDirectoryNode, FileNode } from "./base";
 import { gExtManager } from "../../extension";
 

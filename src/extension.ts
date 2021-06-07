@@ -29,7 +29,7 @@ import * as cppt from 'vscode-cpptools';
 import { ProjectStructure } from "./project";
 import { StatusBar } from './status';
 import { targetPrompt, testPrompt } from './prompts';
-import { Target } from "./meson/types";
+import { Target, Test } from "./meson/types";
 
 class ExtensionManager implements vscode.Disposable {
 
@@ -111,21 +111,21 @@ class ExtensionManager implements vscode.Disposable {
       this.statusBar.setActiveTarget(this.activeTarget);
     });
 
-    reg("build", async (name?: string) => {
+    reg("build", async (target?: Target) => {
       await runMesonBuild(
-        workspaceRelative(extensionConfiguration("buildFolder"))
+        workspaceRelative(extensionConfiguration("buildFolder")),
+        target
       );
       this.explorer.refresh();
     });
 
-    reg("test", async (name?: string) => {
-      if (!name) {
-        const test = await testPrompt();
-        name = test?.name || '';
+    reg("test", async (test?: Test) => {
+      if (!test) {
+        test = await testPrompt();
       }
-      await runMesonTests(
+      await runMesonTests( 
         workspaceRelative(extensionConfiguration("buildFolder")),
-        name
+        test
       );
       this.explorer.refresh();
     });
@@ -136,32 +136,17 @@ class ExtensionManager implements vscode.Disposable {
       });
     });
 
-    const getRunnableTargetName = async () => {
-      if (!this.activeTarget) {
-        const target = await targetPrompt();
-        return target?.filename[0] || undefined;
-      } else {
-        return this.activeTarget.name;
-      }
-    };
-
-    reg("run", async (name?: string) => {
-      if (!name) {
-        name = await getRunnableTargetName();
-      }
+    reg("run", async (target: Target) => {
       await runMesonTarget(
         workspaceRelative(extensionConfiguration("buildFolder")),
-        name
+        target
       );
     });
 
-    reg("debug", async (name?: string) => {
-      if (!name) {
-        name = await getRunnableTargetName();
-      }
+    reg("debug", async (target: Target) => {
       await debugMesonTarget(
         workspaceRelative(extensionConfiguration("buildFolder")),
-        name
+        target
       );
     });
 

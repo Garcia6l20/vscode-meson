@@ -11,11 +11,11 @@ import {
 import { getTask } from "../tasks";
 import { relative } from "path";
 import { checkMesonIsConfigured } from "./utils";
-import * as cpt from 'vscode-cpptools';
 import { TargetNode } from "../treeview/nodes/targets";
 import { TestNode } from "../treeview/nodes/tests";
 import { ProjectNode, TestRootNode } from "../treeview/nodes/toplevel";
 import { gExtManager } from "../extension";
+import { Target, Test } from "./types";
 
 export async function runMesonConfigure(source: string, build: string) {
   return vscode.window.withProgress(
@@ -76,36 +76,34 @@ export async function runMesonReconfigure(projecNode?: ProjectNode) {
   }
 }
 
-async function resolveTargetName(target?: string | TargetNode, acceptAll: boolean = false): Promise<string> {
+type TargetLike = TargetNode|Target;
+
+async function resolveTargetName(target?: TargetLike, acceptAll: boolean = false): Promise<string> {
   if (!target) {
     if (!gExtManager.activeTarget) {
       if (acceptAll) {
-        target = 'all';
+        return 'all';
       } else {
         return null;
       }
     } else {
-      target = await getTargetName(gExtManager.activeTarget);
+      return await getTargetName(gExtManager.activeTarget);
     }
   } else if (target instanceof TargetNode) {
-    target = await getTargetName(target.target);
+    return await getTargetName(target.target);
   }
-  return target;
 }
 
-export async function runMesonBuild(buildDir: string, target?: string | TargetNode) {
+export async function runMesonBuild(buildDir: string, target?: TargetLike) {
 
-  target = await resolveTargetName(target, true);
-  if (!target) {
-    return;
-  }
+  const name = await resolveTargetName(target, true);
 
-  let command = !!target ? `${extensionConfiguration("ninjaPath")} ${target}` : "ninja";
+  let command = `${extensionConfiguration("ninjaPath")} ${name}`;
   const stream = execStream(command, { cwd: buildDir });
 
   return vscode.window.withProgress(
     {
-      title: target ? `Building target ${target}` : "Building project",
+      title: `Building target ${name}`,
       location: vscode.ProgressLocation.Notification,
       cancellable: true
     },
@@ -136,14 +134,16 @@ export async function runMesonBuild(buildDir: string, target?: string | TargetNo
   );
 }
 
-export async function runMesonTests(build: string, name?: string | TestNode | TestRootNode) {
+type TestLike = TestRootNode|TestNode|Test;
+
+export async function runMesonTests(build: string, test?: TestLike) {
   try {
-    if (name && !(name instanceof TestRootNode)) {
-      if (name instanceof TestNode) {
-        name = name.test.name;
+    if (test && !(test instanceof TestRootNode)) {
+      if (test instanceof TestNode) {
+        test = test.test;
       }
       return await execAsTask(
-        `${extensionConfiguration("mesonPath")} test ${name}`,
+        `${extensionConfiguration("mesonPath")} test ${test.name}`,
         { cwd: build },
         vscode.TaskRevealKind.Always
       );
@@ -161,15 +161,27 @@ export async function runMesonTests(build: string, name?: string | TestNode | Te
   }
 }
 
-export async function runMesonTarget(build: string, target?: string | TargetNode) {
-  target = await resolveTargetName(target);
+async function resolveTargetPath(target?: TargetLike): Promise<string> {
   if (!target) {
+    if (!gExtManager.activeTarget) {
+      return null;
+    } else {
+      return gExtManager.activeTarget.filename[0];
+    }
+  } else if (target instanceof TargetNode) {
+    return target.target.filename[0];
+  }
+}
+
+export async function runMesonTarget(build: string, target?: TargetLike) {
+  const targetPath = await resolveTargetPath(target);
+  if (!targetPath) {
     return;
   }
 
   try {
     return await execAsTask(
-      `${target}`,
+      `${targetPath}`,
       { cwd: build },
       vscode.TaskRevealKind.Always
     );
@@ -180,16 +192,17 @@ export async function runMesonTarget(build: string, target?: string | TargetNode
   }
 }
 
-export async function debugMesonTarget(build: string, target?: string | TargetNode): Promise<vscode.DebugSession | null> {
-  target = await resolveTargetName(target);
-  if (!target) {
+export async function debugMesonTarget(build: string, target?: TargetLike): Promise<vscode.DebugSession | null> {
+  const targetPath = await resolveTargetPath(target);
+  if (!targetPath) {
     return;
   }
+  const targetName = await resolveTargetName(target);
 
   try {
     const debugConfig = {
       type: 'cppdbg',
-      name: `Debug ${target}`,
+      name: `Debug ${targetName}`,
       request: 'launch',
       cwd: build,
       MIMode: 'gdb',
@@ -201,7 +214,7 @@ export async function debugMesonTarget(build: string, target?: string | TargetNo
           ignoreFailures: true
         }
       ],
-      program: target
+      program: targetPath
     };
     await vscode.debug.startDebugging(this.folder, debugConfig);
     return vscode.debug.activeDebugSession!;
