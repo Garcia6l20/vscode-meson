@@ -55,7 +55,7 @@ class SourceModel implements TargetSource {
     generated_sources: string[]
 }
 
-class ProjectModel implements ProjectInfo {
+export class ProjectModel implements ProjectInfo {
     public name: string
     public version: string
     public descriptive_name: string
@@ -129,25 +129,54 @@ class ProjectModel implements ProjectInfo {
         this.buildDir = buildDir;
         return this.resolve(meta)
     }
+
+    private walkProject(callback: CallableFunction, project?: ProjectModel) {
+        if (!project)
+        {
+            project = this;
+        }
+        let output = [];
+        output.push(...callback(project));
+        project.subprojects?.forEach(sp => {
+            output.push(...this.walkProject(callback, sp));
+        });
+        return output;
+    }
+    
+    get allTargets(): Targets {
+        return this.walkProject(p => {
+            return p.targets;
+        });
+    }
+
+    get allTests(): Tests {
+        return this.walkProject(p => {
+            return p.tests;
+        });
+    }
+
+    get allBenchmarks(): Tests {
+        return this.walkProject(p => {
+            return p.benchmarks;
+        });
+    }
 }
 
 export class ProjectStructure {
     public readonly root: ProjectModel = new ProjectModel()
 
     private metaData: MetaData
-    get targets() {
-        let proj = this.root;
-        let targets: Targets = [];
-        const appendTargets = (p: ProjectModel) => {
-            if (p.targets) {
-                targets.push(...p.targets);
-            }
-            p.subprojects?.forEach(sp => {
-                appendTargets(sp);
-            });
-        };
-        appendTargets(this.root)
-        return targets;
+
+    get targets(): Targets {
+        return this.root.allTargets;
+    }
+
+    get tests(): Tests {
+        return this.root.allTests;
+    }
+
+    get benchmarks(): Tests {
+        return this.root.allBenchmarks;
     }
 
     async update(projectRoot: string, buildDir: string) {

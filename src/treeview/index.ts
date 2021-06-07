@@ -9,11 +9,14 @@ export class MesonProjectDataProvider
   private _onDataChangeEmitter = new vscode.EventEmitter<BaseNode>();
   readonly onDidChangeTreeData = this._onDataChangeEmitter.event;
 
+  private projectStructure?: ProjectStructure
+
   constructor(ctx: vscode.ExtensionContext, private buildDir: string) {
     ctx.subscriptions.push(
-      vscode.commands.registerCommand("mesonbuild.view-refresh", (projectStructure: ProjectStructure) =>
-        this.refresh()
-      )
+      vscode.commands.registerCommand("mesonbuild.view-refresh", (projectStructure: ProjectStructure) => {
+        this.projectStructure = projectStructure;
+        this.refresh();
+      })
     );
   }
 
@@ -24,12 +27,14 @@ export class MesonProjectDataProvider
   getTreeItem(element: BaseNode) {
     return element.getTreeItem();
   }
+  
   async getChildren(element?: BaseNode) {
     if (element) return element.getChildren();
+    if (!this.projectStructure) {
+      return []
+    }
     return [
-      await getMesonProjectInfo(this.buildDir).then(
-        p => new ProjectNode(p, this.buildDir)
-      )
+      new ProjectNode(this.projectStructure.root)
     ];
   }
 }

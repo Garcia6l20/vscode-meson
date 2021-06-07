@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 
 import { BaseNode } from "../basenode";
 import { Test } from "../../meson/types";
-import { extensionRelative } from "../../utils";
+import { extensionRelative, randomString } from "../../utils";
 
 export class TestNode extends BaseNode {
   constructor(public readonly test: Test) {

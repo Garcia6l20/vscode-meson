@@ -28,7 +28,7 @@ import { CppConfigurationProvider } from './cpptools';
 import * as cppt from 'vscode-cpptools';
 import { ProjectStructure } from "./project";
 import { StatusBar } from './status';
-import { targetPrompt } from './prompts';
+import { targetPrompt, testPrompt } from './prompts';
 import { Target } from "./meson/types";
 
 class ExtensionManager implements vscode.Disposable {
@@ -119,51 +119,14 @@ class ExtensionManager implements vscode.Disposable {
     });
 
     reg("test", async (name?: string) => {
-      const resolvedName = await new Promise<string>((resolve, reject) => {
-        if (name) return resolve(name);
-        const picker = vscode.window.createQuickPick();
-        picker.busy = true;
-        picker.onDidAccept(() => {
-          const active = picker.activeItems[0];
-          if (active.label === "all") resolve(undefined);
-          else resolve(active.label);
-          picker.dispose();
-        });
-        picker.onDidHide(() => reject());
-        Promise.all([getMesonTests(this.buildDir), getMesonBenchmarks(this.buildDir)])
-          .then<vscode.QuickPickItem[]>(([tests, benchmarks]) => [
-            {
-              label: "all",
-              detail: "Run all tests",
-              description: "(meta-target)",
-              picked: true
-            },
-            ...tests.map<vscode.QuickPickItem>(t => ({
-              label: t.name,
-              detail: `Test timeout: ${t.timeout}s, ${t.is_parallel ? "Run in parallel" : "Run serially"
-                }`,
-              description: t.suite.join(","),
-              picked: false
-            })),
-            ...benchmarks.map<vscode.QuickPickItem>(b => ({
-              label: b.name,
-              detail: `Benchmark timeout: ${b.timeout
-                }s, benchmarks always run serially`,
-              description: b.suite.join(","),
-              picked: false
-            }))
-          ])
-          .then(items => {
-            picker.busy = false;
-            picker.items = items;
-          });
-        picker.show();
-      }).catch<null>(() => null);
-      if (resolvedName != null)
-        await runMesonTests(
-          workspaceRelative(extensionConfiguration("buildFolder")),
-          resolvedName
-        );
+      if (!name) {
+        const test = await testPrompt();
+        name = test?.name || '';
+      }
+      await runMesonTests(
+        workspaceRelative(extensionConfiguration("buildFolder")),
+        name
+      );
       this.explorer.refresh();
     });
 
@@ -173,15 +136,32 @@ class ExtensionManager implements vscode.Disposable {
       });
     });
 
+    const getRunnableTargetName = async () => {
+      if (!this.activeTarget) {
+        const target = await targetPrompt();
+        return target?.filename[0] || undefined;
+      } else {
+        return this.activeTarget.name;
+      }
+    };
+
     reg("run", async (name?: string) => {
+      if (!name) {
+        name = await getRunnableTargetName();
+      }
       await runMesonTarget(
-        workspaceRelative(extensionConfiguration("buildFolder"))
+        workspaceRelative(extensionConfiguration("buildFolder")),
+        name
       );
     });
 
     reg("debug", async (name?: string) => {
+      if (!name) {
+        name = await getRunnableTargetName();
+      }
       await debugMesonTarget(
-        workspaceRelative(extensionConfiguration("buildFolder"))
+        workspaceRelative(extensionConfiguration("buildFolder")),
+        name
       );
     });
 

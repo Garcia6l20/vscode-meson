@@ -10,6 +10,10 @@ export class FileNode extends BaseNode {
     super(name + randomString());
   }
 
+  static create(filePath: string) {
+    return new FileNode(path.dirname(filePath), path.basename(filePath));
+  }
+
   getTreeItem() {
     const item = super.getTreeItem() as vscode.TreeItem;
     item.resourceUri = vscode.Uri.file(path.join(this.root, this.name));

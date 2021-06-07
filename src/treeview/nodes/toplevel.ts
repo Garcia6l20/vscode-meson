@@ -10,6 +10,7 @@ import { pathToFileURL } from "url";
 import * as path from 'path';
 import { gExtManager } from "../../extension";
 import { FileNode } from "./base";
+import { ProjectModel } from "../../project";
 
 function getProjectName(project: BaseProject) {
   let name = project.descriptive_name;
@@ -22,8 +23,7 @@ function getProjectName(project: BaseProject) {
 export class ProjectNode extends BaseNode {
 
   constructor(
-    private readonly project: ProjectInfo,
-    private readonly buildDir: string
+    private readonly project: ProjectModel
   ) {
     super(getProjectName(project));
   }
@@ -35,30 +35,23 @@ export class ProjectNode extends BaseNode {
     return item;
   }
   async getChildren() {    
-    const buildFiles = await (await getMesonBuildFiles(this.buildDir)).filter(p => {
-      p = path.dirname(resolveSymlinkPath(gExtManager.projectRoot, p));
-      return p == gExtManager.projectRoot;
-    }).map(p => {
-      return new FileNode(gExtManager.projectRoot, path.basename(p));
-    });
-
-
+    const buildFileNode = FileNode.create(this.project.buildFile);
+    
     return [
-      ...buildFiles,
-      new SubprojectsRootNode(this.project.subprojects, this.buildDir),
+      buildFileNode,
+      new SubprojectsRootNode(this.project.subprojects),
       new TargetDirectoryNode(
         ".",
-        (await getMesonTargets(this.buildDir)).filter(t => !t.subproject)
+        this.project.targets
       ),
-      new TestRootNode(await getMesonTests(this.buildDir))
+      new TestRootNode([...this.project.allTests, ...this.project.allBenchmarks])
     ];
   }
 }
 
 export class SubprojectsRootNode extends BaseNode {
   constructor(
-    private readonly subprojects: Subproject[],
-    private readonly buildDir: string
+    private readonly subprojects: ProjectModel[]
   ) {
     super(
       hash(subprojects.map(s => `${s.descriptive_name} ${s.version}`).join(";"))
@@ -75,7 +68,7 @@ export class SubprojectsRootNode extends BaseNode {
   }
 
   getChildren() {
-    return this.subprojects.map(s => new SubprojectNode(s, this.buildDir));
+    return this.subprojects.map(s => new SubprojectNode(s));
   }
 }
 
@@ -118,8 +111,7 @@ export class TestRootNode extends BaseNode {
 
 export class SubprojectNode extends BaseNode {
   constructor(
-    private readonly subproject: Subproject,
-    private readonly buildDir: string
+    private readonly subproject: ProjectModel
   ) {
     super(getProjectName(subproject));
   }
@@ -132,8 +124,6 @@ export class SubprojectNode extends BaseNode {
   }
 
   async getChildren() {
-    return await getMesonTargets(this.buildDir)
-      .then(tts => tts.filter(t => t.subproject === this.subproject.name))
-      .then(tt => tt.map(t => new TargetNode(t)));
+    return this.subproject.targets.map(t => { return new TargetNode(t); });
   }
 }

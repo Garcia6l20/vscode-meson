@@ -201,7 +201,7 @@ export async function debugMesonTarget(build: string, target?: string | TargetNo
           ignoreFailures: true
         }
       ],
-      program: path.join(build, target)
+      program: target
     };
     await vscode.debug.startDebugging(this.folder, debugConfig);
     return vscode.debug.activeDebugSession!;
