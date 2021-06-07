@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { gExtManager } from './extension';
 import { Target, Test } from './meson/types';
 
@@ -6,21 +7,26 @@ import { Target, Test } from './meson/types';
 /**
  * Prompt for a meson target
  */
-export async function targetPrompt() {
-    const items = [
-        {
-            label: "all",
-            detail: "Build all targets",
-            description: "(meta-target)",
-            picked: true
-        },
-        ...gExtManager.projectStructure.targets.map<vscode.QuickPickItem>(t => ({
+export async function targetPrompt(targetType?: string) {
+    let items = []
+    if (!targetType) {
+        items.push(
+            {
+                label: "all",
+                detail: "Build all targets",
+                description: "(meta-target)",
+                picked: true
+            });
+    }
+    items.push(
+        ...gExtManager.projectStructure.targets.filter(t => {
+            return !targetType || (t.type == targetType);
+        }).map<vscode.QuickPickItem>(t => ({
             label: t.name,
-            //   detail: path.relative(this.projectRoot, path.dirname(t.defined_in)),
+            detail: path.relative(gExtManager.projectRoot, t.filename[0]),
             description: t.type,
             picked: false
-        }))
-    ];
+        })));
     const picker = vscode.window.createQuickPick();
     picker.busy = true;
     picker.placeholder =

@@ -116,7 +116,7 @@ class ExtensionManager implements vscode.Disposable {
         workspaceRelative(extensionConfiguration("buildFolder")),
         target
       );
-      this.explorer.refresh();
+      // this.explorer.refresh();
     });
 
     reg("test", async (test?: Test) => {
@@ -127,7 +127,7 @@ class ExtensionManager implements vscode.Disposable {
         workspaceRelative(extensionConfiguration("buildFolder")),
         test
       );
-      this.explorer.refresh();
+      // this.explorer.refresh();
     });
 
     reg("clean", async () => {
@@ -136,7 +136,7 @@ class ExtensionManager implements vscode.Disposable {
       });
     });
 
-    reg("run", async (target: Target) => {
+    reg("run", async (target?: Target) => {
       await runMesonTarget(
         workspaceRelative(extensionConfiguration("buildFolder")),
         target

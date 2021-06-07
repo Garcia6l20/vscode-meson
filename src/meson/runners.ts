@@ -16,6 +16,7 @@ import { TestNode } from "../treeview/nodes/tests";
 import { ProjectNode, TestRootNode } from "../treeview/nodes/toplevel";
 import { gExtManager } from "../extension";
 import { Target, Test } from "./types";
+import { targetPrompt } from "../prompts";
 
 export async function runMesonConfigure(source: string, build: string) {
   return vscode.window.withProgress(
@@ -76,7 +77,7 @@ export async function runMesonReconfigure(projecNode?: ProjectNode) {
   }
 }
 
-type TargetLike = TargetNode|Target;
+type TargetLike = TargetNode | Target;
 
 async function resolveTargetName(target?: TargetLike, acceptAll: boolean = false): Promise<string> {
   if (!target) {
@@ -134,7 +135,7 @@ export async function runMesonBuild(buildDir: string, target?: TargetLike) {
   );
 }
 
-type TestLike = TestRootNode|TestNode|Test;
+type TestLike = TestRootNode | TestNode | Test;
 
 export async function runMesonTests(build: string, test?: TestLike) {
   try {
@@ -161,10 +162,10 @@ export async function runMesonTests(build: string, test?: TestLike) {
   }
 }
 
-async function resolveTargetPath(target?: TargetLike): Promise<string> {
+async function resolveExecTargetPath(target?: TargetLike): Promise<string> {
   if (!target) {
-    if (!gExtManager.activeTarget) {
-      return null;
+    if ((!gExtManager.activeTarget) || (gExtManager.activeTarget.type != "executable")) {
+      return (await targetPrompt("executable"))?.filename[0];
     } else {
       return gExtManager.activeTarget.filename[0];
     }
@@ -174,7 +175,7 @@ async function resolveTargetPath(target?: TargetLike): Promise<string> {
 }
 
 export async function runMesonTarget(build: string, target?: TargetLike) {
-  const targetPath = await resolveTargetPath(target);
+  const targetPath = await resolveExecTargetPath(target);
   if (!targetPath) {
     return;
   }
@@ -193,7 +194,7 @@ export async function runMesonTarget(build: string, target?: TargetLike) {
 }
 
 export async function debugMesonTarget(build: string, target?: TargetLike): Promise<vscode.DebugSession | null> {
-  const targetPath = await resolveTargetPath(target);
+  const targetPath = await resolveExecTargetPath(target);
   if (!targetPath) {
     return;
   }
