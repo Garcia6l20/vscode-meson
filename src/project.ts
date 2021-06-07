@@ -131,10 +131,24 @@ class ProjectModel implements ProjectInfo {
     }
 }
 
-export class CodeModel {
+export class ProjectStructure {
     public readonly root: ProjectModel = new ProjectModel()
 
     private metaData: MetaData
+    get targets() {
+        let proj = this.root;
+        let targets: Targets = [];
+        const appendTargets = (p: ProjectModel) => {
+            if (p.targets) {
+                targets.push(...p.targets);
+            }
+            p.subprojects?.forEach(sp => {
+                appendTargets(sp);
+            });
+        };
+        appendTargets(this.root)
+        return targets;
+    }
 
     async update(projectRoot: string, buildDir: string) {
         this.metaData = await MetaData.create(projectRoot, buildDir);

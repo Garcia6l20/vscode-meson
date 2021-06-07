@@ -36,7 +36,9 @@ export async function getMesonTargets(build: string) {
   }
   const root = workspace.workspaceFolders[0].uri.path;
   let adapt = (p) => {
-    return resolveSymlinkPath(root, p);
+    const bname = path.basename(p);
+    const dname = path.dirname(p);
+    return path.join(resolveSymlinkPath(root, dname), bname);
   };
   parsed = parsed.map(t => {
     t.defined_in = adapt(t.defined_in);

@@ -55,8 +55,10 @@ export class TargetDirectoryNode extends BaseDirectoryNode<Target> {
 }
 
 export class TargetNode extends BaseNode {
+  public readonly name : string
   constructor(public readonly target: Target) {
     super(target.id);
+    this.name = target.name;
   }
 
   async getFullTargetName() {

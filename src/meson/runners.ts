@@ -1,10 +1,12 @@
 import * as vscode from "vscode";
+import * as path from "path";
 import {
   exec,
   execAsTask,
   getOutputChannel,
   extensionConfiguration,
-  execStream
+  execStream,
+  getTargetName
 } from "../utils";
 import { getTask } from "../tasks";
 import { relative } from "path";
@@ -13,6 +15,7 @@ import * as cpt from 'vscode-cpptools';
 import { TargetNode } from "../treeview/nodes/targets";
 import { TestNode } from "../treeview/nodes/tests";
 import { ProjectNode, TestRootNode } from "../treeview/nodes/toplevel";
+import { gExtManager } from "../extension";
 
 export async function runMesonConfigure(source: string, build: string) {
   return vscode.window.withProgress(
@@ -73,10 +76,28 @@ export async function runMesonReconfigure(projecNode?: ProjectNode) {
   }
 }
 
+async function resolveTargetName(target?: string | TargetNode, acceptAll: boolean = false): Promise<string> {
+  if (!target) {
+    if (!gExtManager.activeTarget) {
+      if (acceptAll) {
+        target = 'all';
+      } else {
+        return null;
+      }
+    } else {
+      target = await getTargetName(gExtManager.activeTarget);
+    }
+  } else if (target instanceof TargetNode) {
+    target = await getTargetName(target.target);
+  }
+  return target;
+}
+
 export async function runMesonBuild(buildDir: string, target?: string | TargetNode) {
 
-  if (target instanceof TargetNode) {
-    target = await target.getFullTargetName();
+  target = await resolveTargetName(target, true);
+  if (!target) {
+    return;
   }
 
   let command = !!target ? `${extensionConfiguration("ninjaPath")} ${target}` : "ninja";
@@ -115,9 +136,9 @@ export async function runMesonBuild(buildDir: string, target?: string | TargetNo
   );
 }
 
-export async function runMesonTests(build: string, name?: string|TestNode|TestRootNode) {
+export async function runMesonTests(build: string, name?: string | TestNode | TestRootNode) {
   try {
-    if (name && !(name instanceof TestRootNode)){
+    if (name && !(name instanceof TestRootNode)) {
       if (name instanceof TestNode) {
         name = name.test.name;
       }
@@ -141,18 +162,49 @@ export async function runMesonTests(build: string, name?: string|TestNode|TestRo
 }
 
 export async function runMesonTarget(build: string, target?: string | TargetNode) {
+  target = await resolveTargetName(target);
   if (!target) {
     return;
   }
-  if (target instanceof TargetNode) {
-    target = await target.getFullTargetName();
-  }
+
   try {
     return await execAsTask(
       `${target}`,
       { cwd: build },
       vscode.TaskRevealKind.Always
     );
+  } catch (e) {
+    if (e.stderr) {
+      vscode.window.showErrorMessage("Error while running target.");
+    }
+  }
+}
+
+export async function debugMesonTarget(build: string, target?: string | TargetNode): Promise<vscode.DebugSession | null> {
+  target = await resolveTargetName(target);
+  if (!target) {
+    return;
+  }
+
+  try {
+    const debugConfig = {
+      type: 'cppdbg',
+      name: `Debug ${target}`,
+      request: 'launch',
+      cwd: build,
+      MIMode: 'gdb',
+      miDebuggerPath: 'gdb',
+      setupCommands: [
+        {
+          description: 'Enable pretty-printing for gdb',
+          text: '-enable-pretty-printing',
+          ignoreFailures: true
+        }
+      ],
+      program: path.join(build, target)
+    };
+    await vscode.debug.startDebugging(this.folder, debugConfig);
+    return vscode.debug.activeDebugSession!;
   } catch (e) {
     if (e.stderr) {
       vscode.window.showErrorMessage("Error while running target.");

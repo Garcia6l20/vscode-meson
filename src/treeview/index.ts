@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { BaseNode } from "./basenode";
 import { getMesonProjectInfo } from "../meson/introspection";
 import { ProjectNode } from "./nodes/toplevel";
+import { ProjectStructure } from "../project";
 
 export class MesonProjectDataProvider
   implements vscode.TreeDataProvider<BaseNode> {
@@ -10,7 +11,7 @@ export class MesonProjectDataProvider
 
   constructor(ctx: vscode.ExtensionContext, private buildDir: string) {
     ctx.subscriptions.push(
-      vscode.commands.registerCommand("mesonbuild.view-refresh", () =>
+      vscode.commands.registerCommand("mesonbuild.view-refresh", (projectStructure: ProjectStructure) =>
         this.refresh()
       )
     );

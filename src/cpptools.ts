@@ -16,19 +16,21 @@ export class CppConfigurationProvider implements cpt.CustomConfigurationProvider
         }
     }
 
-    async canProvideBrowseConfiguration() { return true; }
+    async canProvideBrowseConfiguration() { return false; }
 
     provideBrowseConfiguration(token?: CancellationToken): Thenable<cpt.WorkspaceBrowseConfiguration> {
         throw new Error('Method not implemented.');
     }
 
-    async canProvideBrowseConfigurationsPerFolder() { return true; }
+    async canProvideBrowseConfigurationsPerFolder() { return false; }
 
     private readonly workspaceBrowseConfigurations = new Map<string, cpt.WorkspaceBrowseConfiguration>();
 
     provideFolderBrowseConfiguration(uri: Uri, token?: CancellationToken): Thenable<cpt.WorkspaceBrowseConfiguration> {
-        // let test = new cpt.WorkspaceBrowseConfiguration()
+        // let config = new cpt.WorkspaceBrowseConfiguration()
         // gExtManager.explorer.
+        // gExtManager.projectStructure.root
+
         throw new Error('Method not implemented.');
     }
 

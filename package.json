@@ -53,6 +53,11 @@
         "title": "Meson: Clean"
       },
       {
+        "command": "mesonbuild.selectActiveTarget",
+        "title": "Meson: Select active target",
+        "icon": "./res/icon-executable.svg"
+      },
+      {
         "command": "mesonbuild.build",
         "title": "Meson: Build",
         "icon": "./res/icon-build.svg"
@@ -61,6 +66,11 @@
         "command": "mesonbuild.run",
         "title": "Meson: Run target",
         "icon": "$(run)"
+      },
+      {
+        "command": "mesonbuild.debug",
+        "title": "Meson: Debug target",
+        "icon": "$(debug-alt)"
       },
       {
         "command": "mesonbuild.test",
@@ -193,6 +203,23 @@
       ]
     },
     "menus": {
+      "view/title": [
+        {
+          "command": "mesonbuild.reconfigure",
+          "when": "view == meson-project",
+          "group": "navigation@1"
+        },
+        {
+          "command": "mesonbuild.build",
+          "when": "view == meson-project",
+          "group": "navigation@2"
+        },
+        {
+          "command": "mesonbuild.clean",
+          "when": "view == meson-project",
+          "group": "navigation@3"
+        }
+      ],
       "view/item/context": [
         {
           "command": "mesonbuild.build",
@@ -205,9 +232,56 @@
           "group": "inline"
         },
         {
+          "command": "mesonbuild.debug",
+          "when": "view == meson-project && viewItem =~ /canRun=true/",
+          "group": "inline"
+        },
+        {
           "command": "mesonbuild.test",
           "when": "view == meson-project && viewItem =~ /isTestRoot=true/",
           "group": "inline"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "mesonbuild.reconfigure",
+          "when": "resourceFilename == meson.build || resourceFilename == nosem.build.py"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "mesonbuild.reconfigure",
+          "when": "resourceFilename == meson.build || resourceFilename == nosem.build.py"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "mesonbuild.reconfigure",
+          "when": "resourceFilename == meson.build || resourceFilename == nosem.build.py"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "mesonbuild.reconfigure",
+          "when": "resourceFilename == meson.build || resourceFilename == nosem.build.py"
+        }
+      ],
+      "touchBar": [
+        {
+          "command": "mesonbuild.reconfigure",
+          "group": "Meson::build"
+        },
+        {
+          "command": "mesonbuild.build",
+          "group": "Meson::build"
+        },
+        {
+          "command": "mesonbuild.run",
+          "group": "Meson::run"
+        },
+        {
+          "command": "mesonbuild.debug",
+          "group": "Meson::run"
         }
       ]
     }
@@ -223,7 +297,6 @@
     "vscode": "^1.1.34"
   },
   "dependencies": {
-    "ts-type-utils": "^1.0.1",
     "array-flat-polyfill": "^1.0.1",
     "vsce": "^1.92.0",
     "vscode-cpptools": "^5.0.0"

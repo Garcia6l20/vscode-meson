@@ -5,7 +5,8 @@ import {
   runMesonBuild,
   runMesonTests,
   runMesonReconfigure,
-  runMesonTarget
+  runMesonTarget,
+  debugMesonTarget
 } from "./meson/runners";
 import { getMesonTasks } from "./tasks";
 import { MesonProjectExplorer } from "./treeview";
@@ -25,19 +26,26 @@ import {
 
 import { CppConfigurationProvider } from './cpptools';
 import * as cppt from 'vscode-cpptools';
-import { CodeModel } from "./codemodel";
-
+import { ProjectStructure } from "./project";
+import { StatusBar } from './status';
+import { targetPrompt } from './prompts';
+import { Target } from "./meson/types";
 
 class ExtensionManager implements vscode.Disposable {
 
   private cpptApi?: cppt.CppToolsApi;
-  private readonly cppConfProvider = new CppConfigurationProvider();
+  private readonly cppConfProvider = new CppConfigurationProvider;
   public readonly explorer?: MesonProjectExplorer
 
   public readonly projectRoot: string
   private buildDir: string
 
-  public readonly codeModel = new CodeModel()
+  private _activeTarget?: Target = null
+  get activeTarget() { return this._activeTarget; }
+
+  public readonly projectStructure = new ProjectStructure;
+
+  private readonly statusBar = new StatusBar;
 
   constructor(public readonly extensionContext: vscode.ExtensionContext) {
 
@@ -98,56 +106,15 @@ class ExtensionManager implements vscode.Disposable {
       this.explorer.refresh();
     });
 
+    reg("selectActiveTarget", async () => {
+      this._activeTarget = await targetPrompt();
+      this.statusBar.setActiveTarget(this.activeTarget);
+    });
+
     reg("build", async (name?: string) => {
-      const resolvedName = await new Promise<string>((resolve, reject) => {
-        if (name) {
-          return resolve(name);
-        }
-        const itemsP: Promise<vscode.QuickPickItem[]> = getMesonTargets(
-          this.buildDir
-        ).then<vscode.QuickPickItem[]>(tt => [
-          {
-            label: "all",
-            detail: "Build all targets",
-            description: "(meta-target)",
-            picked: true
-          },
-          ...tt.map<vscode.QuickPickItem>(t => ({
-            label: t.name,
-            detail: path.relative(this.projectRoot, path.dirname(t.defined_in)),
-            description: t.type,
-            picked: false
-          }))
-        ]);
-        const picker = vscode.window.createQuickPick();
-        picker.busy = true;
-        picker.placeholder =
-          "Select target to build. Defaults to all targets";
-        picker.show();
-        itemsP.then(items => {
-          picker.items = items;
-          picker.busy = false;
-          picker.onDidAccept(async () => {
-            const active = picker.activeItems[0];
-            if (active.label === "all") resolve(undefined);
-            else
-              resolve(
-                getTargetName(
-                  (await getMesonTargets(this.buildDir)).filter(
-                    t => t.name === active.label
-                  )[0]
-                )
-              );
-            picker.dispose();
-          });
-          picker.onDidHide(() => reject());
-        });
-      }).catch<null>(() => null);
-      if (resolvedName !== null)
-        await runMesonBuild(
-          workspaceRelative(extensionConfiguration("buildFolder")),
-          resolvedName
-        );
+      await runMesonBuild(
+        workspaceRelative(extensionConfiguration("buildFolder"))
+      );
       this.explorer.refresh();
     });
 
@@ -201,47 +168,27 @@ class ExtensionManager implements vscode.Disposable {
     });
 
     reg("clean", async () => {
-      await execAsTask(`extensionConfiguration("ninjaPath") clean`, {
+      await execAsTask(`${extensionConfiguration("ninjaPath")} clean`, {
         cwd: workspaceRelative(extensionConfiguration("buildFolder"))
       });
     });
 
     reg("run", async (name?: string) => {
-      const resolvedName = await new Promise<string>((resolve, reject) => {
-        if (name) return resolve(name);
-        const picker = vscode.window.createQuickPick();
-        picker.busy = true;
-        picker.onDidAccept(() => {
-          const active = picker.activeItems[0];
-          if (active.label === "all") resolve(undefined);
-          else resolve(active.label);
-          picker.dispose();
-        });
-        picker.onDidHide(() => reject());
-        getMesonExecutables(this.buildDir)
-          .then<vscode.QuickPickItem[]>(execs => [
-            ...execs.map<vscode.QuickPickItem>(t => ({
-              label: t.name,
-              picked: false
-            }))
-          ])
-          .then(items => {
-            picker.busy = false;
-            picker.items = items;
-          });
-        picker.show();
-      }).catch<null>(() => null);
-      if (resolvedName != null)
-        await runMesonTarget(
-          workspaceRelative(extensionConfiguration("buildFolder")),
-          resolvedName
-        );
-      this.explorer.refresh();
+      await runMesonTarget(
+        workspaceRelative(extensionConfiguration("buildFolder"))
+      );
+    });
+
+    reg("debug", async (name?: string) => {
+      await debugMesonTarget(
+        workspaceRelative(extensionConfiguration("buildFolder"))
+      );
     });
 
     reg("targets-refresh", async () => {
-      await this.codeModel.update(this.projectRoot, this.buildDir);
-      await vscode.commands.executeCommand<boolean>("mesonbuild.view-refresh");
+      await this.projectStructure.update(this.projectRoot, this.buildDir);
+      await vscode.commands.executeCommand<boolean>("mesonbuild.view-refresh", this.projectStructure);
+      // this.cpptApi.didChangeCustomConfiguration(this.cppConfProvider);
     });
   }
 
@@ -305,7 +252,7 @@ class ExtensionManager implements vscode.Disposable {
     await gExtManager.registerTaskProvider();
     await gExtManager.registerCommands();
     await gExtManager.onLoaded();
-    // await self.registerCppToolsProvider();
+    // await gExtManager.registerCppToolsProvider();
   }
 
   /**
