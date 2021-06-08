@@ -9,14 +9,6 @@ import { Target } from "./meson/types";
 import { ExtensionConfiguration } from "./types";
 import { getMesonBuildOptions } from "./meson/introspection";
 
-export function exists(file: string): Promise<boolean> {
-  return new Promise<boolean>((resolve, _reject) => {
-    fs.exists(file, value => {
-      resolve(value);
-    });
-  });
-}
-
 export function exec(
   command: string,
   options: cp.ExecOptions

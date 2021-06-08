@@ -29,7 +29,6 @@
   "activationEvents": [
     "onLanguage:meson",
     "onCommand:mesonbuild.configure",
-    "onCommand:mesonbuild.reconfigure",
     "onCommand:mesonbuild.build",
     "onCommand:mesonbuild.test",
     "workspaceContains:meson.build",
@@ -41,11 +40,6 @@
       {
         "command": "mesonbuild.configure",
         "title": "Meson: Configure",
-        "icon": "$(debug-configure)"
-      },
-      {
-        "command": "mesonbuild.reconfigure",
-        "title": "Meson: Reconfigure",
         "icon": "$(debug-configure)"
       },
       {
@@ -115,53 +109,6 @@
         }
       }
     },
-    "taskDefinitions": [
-      {
-        "type": "meson",
-        "required": [
-          "mode"
-        ],
-        "properties": {
-          "target": {
-            "type": "string",
-            "description": "The Meson target to... target",
-            "default": "all",
-            "dependencies": {
-              "mode": {
-                "enum": [
-                  "build",
-                  "test"
-                ]
-              }
-            }
-          },
-          "filename": {
-            "type": "string",
-            "description": "Filename to run as part of the target",
-            "dependencies": {
-              "mode": {
-                "enum": [
-                  "run"
-                ]
-              }
-            }
-          },
-          "mode": {
-            "type": "string",
-            "description": "Specify the kind of task to perform",
-            "enum": [
-              "build",
-              "run",
-              "debug",
-              "test",
-              "reconfigure",
-              "clean"
-            ],
-            "default": "build"
-          }
-        }
-      }
-    ],
     "languages": [
       {
         "id": "meson",
@@ -210,7 +157,7 @@
     "menus": {
       "view/title": [
         {
-          "command": "mesonbuild.reconfigure",
+          "command": "mesonbuild.configure",
           "when": "view == meson-project",
           "group": "navigation@1"
         },
@@ -249,31 +196,31 @@
       ],
       "editor/title/context": [
         {
-          "command": "mesonbuild.reconfigure",
+          "command": "mesonbuild.configure",
           "when": "resourceFilename == meson.build || resourceFilename == nosem.build.py"
         }
       ],
       "editor/title": [
         {
-          "command": "mesonbuild.reconfigure",
+          "command": "mesonbuild.configure",
           "when": "resourceFilename == meson.build || resourceFilename == nosem.build.py"
         }
       ],
       "editor/context": [
         {
-          "command": "mesonbuild.reconfigure",
+          "command": "mesonbuild.configure",
           "when": "resourceFilename == meson.build || resourceFilename == nosem.build.py"
         }
       ],
       "explorer/context": [
         {
-          "command": "mesonbuild.reconfigure",
+          "command": "mesonbuild.configure",
           "when": "resourceFilename == meson.build || resourceFilename == nosem.build.py"
         }
       ],
       "touchBar": [
         {
-          "command": "mesonbuild.reconfigure",
+          "command": "mesonbuild.configure",
           "group": "Meson::build"
         },
         {

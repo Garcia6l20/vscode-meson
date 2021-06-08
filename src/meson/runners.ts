@@ -8,12 +8,11 @@ import {
   execStream,
   getTargetName
 } from "../utils";
-import { getTask } from "../tasks";
 import { relative } from "path";
 import { checkMesonIsConfigured } from "./utils";
 import { TargetNode } from "../treeview/nodes/targets";
 import { TestNode } from "../treeview/nodes/tests";
-import { ProjectNode, TestRootNode } from "../treeview/nodes/toplevel";
+import { TestRootNode } from "../treeview/nodes/toplevel";
 import { gExtManager } from "../extension";
 import { Target, Test } from "./types";
 import { targetPrompt } from "../prompts";
@@ -64,17 +63,6 @@ export async function runMesonConfigure(source: string, build: string) {
       return new Promise(res => setTimeout(res, 2000));
     }
   );
-}
-
-export async function runMesonReconfigure(projecNode?: ProjectNode) {
-  try {
-    await vscode.tasks.executeTask(await getTask("reconfigure"));
-  } catch (e) {
-    vscode.window.showErrorMessage("Couldn't reconfigure project.");
-    getOutputChannel().appendLine("Reconfiguring Meson:");
-    getOutputChannel().appendLine(e);
-    getOutputChannel().show(true);
-  }
 }
 
 type TargetLike = TargetNode | Target;

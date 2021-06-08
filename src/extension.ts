@@ -4,25 +4,16 @@ import {
   runMesonConfigure,
   runMesonBuild,
   runMesonTests,
-  runMesonReconfigure,
   runMesonTarget,
   debugMesonTarget
 } from "./meson/runners";
-import { getMesonTasks } from "./tasks";
 import { MesonProjectExplorer } from "./treeview";
 import {
   extensionConfiguration,
   execAsTask,
   workspaceRelative,
-  extensionConfigurationSet,
-  getTargetName
+  extensionConfigurationSet
 } from "./utils";
-import {
-  getMesonTargets,
-  getMesonTests,
-  getMesonBenchmarks,
-  getMesonExecutables
-} from "./meson/introspection";
 
 import { CppConfigurationProvider } from './cpptools';
 import * as cppt from 'vscode-cpptools';
@@ -67,21 +58,6 @@ class ExtensionManager implements vscode.Disposable {
     }
   }
 
-  async registerTaskProvider() {
-    this.extensionContext.subscriptions.push(
-      vscode.tasks.registerTaskProvider("meson", {
-        provideTasks(token) {
-          return getMesonTasks(
-            workspaceRelative(this.buildFolder)
-          );
-        },
-        resolveTask() {
-          return undefined;
-        }
-      })
-    );
-  }
-
   async registerCommands() {
 
     const reg = (id, handle) => {
@@ -91,14 +67,6 @@ class ExtensionManager implements vscode.Disposable {
     };
 
     reg("configure", async () => {
-      await runMesonConfigure(
-        this.projectRoot,
-        workspaceRelative(extensionConfiguration("buildFolder"))
-      );
-      this.explorer.refresh();
-    });
-
-    reg("reconfigure", async () => {
       await runMesonConfigure(
         this.projectRoot,
         workspaceRelative(extensionConfiguration("buildFolder"))
@@ -214,7 +182,6 @@ class ExtensionManager implements vscode.Disposable {
   static async create(context: vscode.ExtensionContext) {
     gExtManager = new ExtensionManager(context);
 
-    await gExtManager.registerTaskProvider();
     await gExtManager.registerCommands();
     await gExtManager.onLoaded();
     // await gExtManager.registerCppToolsProvider();
