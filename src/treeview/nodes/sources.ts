@@ -1,9 +1,9 @@
 import * as path from "path";
 import * as vscode from "vscode";
 
-import { extensionRelative, randomString, resolveSymlinkPath } from "../../utils";
-import { BaseNode } from "../basenode";
-import { BaseFileDirectoryNode } from "./base";
+import { extensionRelative, randomString, resolveSymlinkPath } from "@meson/utils";
+import { BaseNode } from "@meson/treeview/basenode";
+import { BaseFileDirectoryNode } from "@meson/treeview/nodes/base";
 
 export class TargetSourcesNode extends BaseFileDirectoryNode {
   constructor(rootFolder: string, private readonly allFiles: string[]) {

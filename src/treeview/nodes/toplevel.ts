@@ -1,12 +1,12 @@
 import * as vscode from "vscode";
 
-import { BaseNode } from "../basenode";
-import { BaseProject, Tests, Targets } from "../../meson/types";
-import { extensionRelative, hash, randomString } from "../../utils";
-import { TargetDirectoryNode, TargetNode } from "./targets";
-import { TestNode } from "./tests";
-import { FileNode } from "./base";
-import { ProjectModel } from "../../project";
+import { BaseNode } from "@meson/treeview/basenode";
+import { BaseProject, Tests, Targets } from "@meson/meson/types";
+import { extensionRelative, hash, randomString } from "@meson/utils";
+import { TargetNode } from "./targets";
+import { TestNode } from "@meson/treeview/nodes/tests";
+import { FileNode } from "@meson/treeview/nodes/base";
+import { ProjectModel } from "@meson/project";
 
 function getProjectName(project: BaseProject) {
   let name = project.descriptive_name;

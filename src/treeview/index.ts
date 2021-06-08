@@ -1,8 +1,7 @@
 import * as vscode from "vscode";
-import { BaseNode } from "./basenode";
-import { getMesonProjectInfo } from "../meson/introspection";
-import { ProjectNode } from "./nodes/toplevel";
-import { ProjectStructure } from "../project";
+import { BaseNode } from "@meson/treeview/basenode";
+import { ProjectNode } from "@meson/treeview/nodes/toplevel";
+import { ProjectStructure } from "@meson/project";
 
 export class MesonProjectDataProvider
   implements vscode.TreeDataProvider<BaseNode> {

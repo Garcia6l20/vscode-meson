@@ -5,19 +5,19 @@ import {
   runMesonTests,
   runMesonTarget,
   debugMesonTarget
-} from "./meson/runners";
-import { MesonProjectExplorer } from "./treeview";
+} from "@meson/meson/runners";
+import { MesonProjectExplorer } from "@meson/treeview";
 import {
   extensionConfiguration,
   execAsTask,
   workspaceRelative,
   extensionConfigurationSet
-} from "./utils";
+} from "@meson/utils";
 
-import { ProjectStructure } from "./project";
-import { StatusBar } from './status';
-import { targetPrompt, testPrompt } from './prompts';
-import { Target, Test } from "./meson/types";
+import { ProjectStructure } from "@meson/project";
+import { StatusBar } from '@meson/status';
+import { targetPrompt, testPrompt } from '@meson/prompts';
+import { Target, Test } from "@meson/meson/types";
 
 class ExtensionManager implements vscode.Disposable {
 

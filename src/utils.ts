@@ -4,10 +4,11 @@ import * as fs from "fs";
 import * as path from "path";
 import * as cp from "child_process";
 import * as vscode from "vscode";
+
 import { randomBytes, createHash, BinaryLike } from "crypto";
-import { Target } from "./meson/types";
-import { ExtensionConfiguration } from "./types";
-import { getMesonBuildOptions } from "./meson/introspection";
+import { Target } from "@meson/meson/types";
+import { ExtensionConfiguration } from "@meson/types";
+import { getMesonBuildOptions } from "@meson/meson/introspection";
 
 export function exec(
   command: string,

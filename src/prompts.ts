@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { gExtManager } from './extension';
-import { Target, Test } from './meson/types';
+
+import { gExtManager } from '@meson/extension';
+import { Target, Test } from '@meson/meson/types';
 
 
 /**

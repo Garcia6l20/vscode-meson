@@ -1,15 +1,13 @@
 import * as path from "path";
-import { types } from "util";
 import { workspace } from "vscode";
-import { exec, parseJSONFileIfExists, extensionConfiguration, resolveSymlinkPath } from "../utils";
+import { exec, parseJSONFileIfExists, extensionConfiguration, resolveSymlinkPath } from "@meson/utils";
 import {
   Targets,
   Dependencies,
   BuildOptions,
-  Test,
   Tests,
   ProjectInfo
-} from "./types";
+} from "@meson/meson/types";
 
 const MESON_VERSION_REGEX = /^(\d+)\.(\d+)\.(\d+)/g;
 

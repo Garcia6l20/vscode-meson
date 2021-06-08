@@ -7,15 +7,15 @@ import {
   extensionConfiguration,
   execStream,
   getTargetName
-} from "../utils";
+} from "@meson/utils";
 import { relative } from "path";
-import { checkMesonIsConfigured } from "./utils";
-import { TargetNode } from "../treeview/nodes/targets";
-import { TestNode } from "../treeview/nodes/tests";
-import { TestRootNode } from "../treeview/nodes/toplevel";
-import { gExtManager } from "../extension";
-import { Target, Test } from "./types";
-import { targetPrompt } from "../prompts";
+import { checkMesonIsConfigured } from "@meson/meson/utils";
+import { TargetNode } from "@meson/treeview/nodes/targets";
+import { TestNode } from "@meson/treeview/nodes/tests";
+import { TestRootNode } from "@meson/treeview/nodes/toplevel";
+import { gExtManager } from "@meson/extension";
+import { Target, Test } from "@meson/meson/types";
+import { targetPrompt } from "@meson/prompts";
 
 export async function runMesonConfigure(source: string, build: string) {
   return vscode.window.withProgress(

@@ -1,10 +1,8 @@
-import { getMesonBenchmarks, getMesonBuildFiles, getMesonProjectInfo, getMesonTargets, getMesonTests } from './meson/introspection'
-import { ProjectInfo, Subproject, Targets, TargetSource, Tests } from './meson/types'
-
 import * as path from 'path'
-import * as fs from 'fs'
-import { resolveSymlinkPath } from './utils'
-import { gExtManager } from './extension'
+
+import { getMesonBenchmarks, getMesonBuildFiles, getMesonProjectInfo, getMesonTargets, getMesonTests } from '@meson/meson/introspection'
+import { ProjectInfo, Targets, TargetSource, Tests } from '@meson/meson/types'
+import { resolveSymlinkPath } from '@meson/utils'
 
 /** @brief Copy interface properties from @a source to @a dest
  * 

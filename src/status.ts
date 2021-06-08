@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Target } from './meson/types';
+import { Target } from '@meson/meson/types';
 
 
 abstract class Button {

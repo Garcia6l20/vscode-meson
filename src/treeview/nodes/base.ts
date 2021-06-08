@@ -1,8 +1,8 @@
 import * as path from "path";
 import * as vscode from "vscode";
-import { randomString, isThenable } from "../../utils";
-import { DirectoryNode, TargetSourceFileNode } from "./sources";
-import { BaseNode } from "../basenode";
+import { randomString, isThenable } from "@meson/utils";
+import { DirectoryNode, TargetSourceFileNode } from "@meson/treeview/nodes/sources";
+import { BaseNode } from "@meson/treeview/basenode";
 
 
 export class FileNode extends BaseNode {
