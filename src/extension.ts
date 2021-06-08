@@ -1,4 +1,3 @@
-import * as path from "path";
 import * as vscode from "vscode";
 import {
   runMesonConfigure,
@@ -15,8 +14,6 @@ import {
   extensionConfigurationSet
 } from "./utils";
 
-import { CppConfigurationProvider } from './cpptools';
-import * as cppt from 'vscode-cpptools';
 import { ProjectStructure } from "./project";
 import { StatusBar } from './status';
 import { targetPrompt, testPrompt } from './prompts';
@@ -24,8 +21,6 @@ import { Target, Test } from "./meson/types";
 
 class ExtensionManager implements vscode.Disposable {
 
-  private cpptApi?: cppt.CppToolsApi;
-  private readonly cppConfProvider = new CppConfigurationProvider;
   public readonly explorer?: MesonProjectExplorer
 
   public readonly projectRoot: string
@@ -49,13 +44,6 @@ class ExtensionManager implements vscode.Disposable {
 
     this.explorer = new MesonProjectExplorer(this.extensionContext, this.buildDir);
 
-  }
-
-  async registerCppToolsProvider() {
-    if (!this.cpptApi) {
-      this.cpptApi = await cppt.getCppToolsApi(cppt.Version.v5);
-      this.cpptApi.registerCustomConfigurationProvider(this.cppConfProvider);
-    }
   }
 
   async registerCommands() {
@@ -121,7 +109,6 @@ class ExtensionManager implements vscode.Disposable {
     reg("targets-refresh", async () => {
       await this.projectStructure.update(this.projectRoot, this.buildDir);
       await vscode.commands.executeCommand<boolean>("mesonbuild.view-refresh", this.projectStructure);
-      // this.cpptApi.didChangeCustomConfiguration(this.cppConfProvider);
     });
   }
 
@@ -173,7 +160,6 @@ class ExtensionManager implements vscode.Disposable {
   }
 
   async cleanup() {
-    this.cpptApi.dispose();
   }
 
   /**
@@ -184,7 +170,6 @@ class ExtensionManager implements vscode.Disposable {
 
     await gExtManager.registerCommands();
     await gExtManager.onLoaded();
-    // await gExtManager.registerCppToolsProvider();
 
     vscode.commands.executeCommand("setContext", "inMesonProject", true);
   }
