@@ -32,7 +32,7 @@ export async function getMesonTargets(build: string) {
       return t;
     });
   }
-  const root = workspace.workspaceFolders[0].uri.path;
+  const root = workspace.workspaceFolders[0].uri.fsPath;
   let adapt = (p) => {
     const bname = path.basename(p);
     const dname = path.dirname(p);

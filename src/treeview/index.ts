@@ -21,7 +21,7 @@ export class MesonProjectDataProvider
   }
 
   refresh() {
-    this._onDataChangeEmitter.fire();
+    this._onDataChangeEmitter.fire(this.projectNode);
   }
 
   getTreeItem(element: BaseNode) {

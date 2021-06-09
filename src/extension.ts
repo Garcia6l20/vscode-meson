@@ -35,7 +35,7 @@ class ExtensionManager implements vscode.Disposable {
 
   constructor(public readonly extensionContext: vscode.ExtensionContext) {
 
-    this.projectRoot = vscode.workspace.workspaceFolders[0].uri.path;
+    this.projectRoot = vscode.workspace.workspaceFolders[0].uri.fsPath;
     if (!this.projectRoot) {
       throw new Error("Invalid project root");
     }
@@ -79,7 +79,7 @@ class ExtensionManager implements vscode.Disposable {
       if (!test) {
         test = await testPrompt();
       }
-      await runMesonTests( 
+      await runMesonTests(
         workspaceRelative(extensionConfiguration("buildFolder")),
         test
       );
