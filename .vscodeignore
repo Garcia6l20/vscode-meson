@@ -1,0 +1,13 @@
+.vscode/
+.github/
+node_modules/
+package/
+out/
+src/
+types/
+test/
+
+.gitignore
+tsconfig.json
+webpack.config.js
+tsconfig.json

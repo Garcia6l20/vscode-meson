@@ -1,5 +1,6 @@
 /out
 /dist
+/package
 /node_modules
 package-lock.json
 /testproj

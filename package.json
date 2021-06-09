@@ -34,7 +34,7 @@
     "workspaceContains:meson.build",
     "workspaceContains:nosem.build.py"
   ],
-  "main": "./out/src/extension",
+  "main": "./dist/extension",
   "contributes": {
     "commands": [
       {
@@ -259,7 +259,7 @@
     "vscode:prepublish": "npm run compile-production",
     "compile": "npm install && ./node_modules/.bin/webpack --mode development --watch --progress",
     "compile-production": "npm install && ./node_modules/.bin/webpack --mode production",
-    "package": "./node_modules/.bin/vsce package"
+    "package": "mkdir -p ./package && ./node_modules/.bin/vsce package -o package/meson-$(git describe --tags --abbrev=0 | sed 's/^.//').vsix"
   },
   "devDependencies": {
     "@types/node": "^12.0.2",
