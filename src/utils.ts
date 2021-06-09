@@ -54,6 +54,7 @@ export function execAsTask(
   options: vscode.ShellExecutionOptions,
   revealMode = vscode.TaskRevealKind.Silent
 ) {
+  command = command.split(path.sep).join(path.posix.sep);
   const task = new vscode.Task(
     { type: "temp" },
     command,

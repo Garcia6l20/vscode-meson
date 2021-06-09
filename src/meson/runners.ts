@@ -164,7 +164,9 @@ export async function runMesonTests(build: string, test?: TestLike) {
 async function resolveExecTargetPath(target?: TargetLike): Promise<string> {
   if (!target) {
     if ((!gExtManager.activeTarget) || (gExtManager.activeTarget.type != "executable")) {
-      return (await targetPrompt("executable"))?.filename[0];
+      target = await targetPrompt("executable");
+      const targetPath = target?.filename[0];
+      return targetPath;
     } else {
       return gExtManager.activeTarget.filename[0];
     }
@@ -192,30 +194,49 @@ export async function runMesonTarget(build: string, target?: TargetLike) {
   }
 }
 
+function makeGDBConfig(cwd, target) {
+  return {
+    type: 'cppdbg',
+    name: `Debug ${path.basename(target)}`,
+    request: 'launch',
+    cwd: cwd,
+    MIMode: 'gdb',
+    miDebuggerPath: 'gdb',
+    setupCommands: [
+      {
+        description: 'Enable pretty-printing for gdb',
+        text: '-enable-pretty-printing',
+        ignoreFailures: true
+      }
+    ],
+    program: target
+  };
+}
+
+function makeMSVCConfig(cwd: string, target: string) {
+  return {
+    type: 'cppvsdbg',
+    name: `Debug ${path.basename(target)}`,
+    request: 'launch',
+    cwd: cwd,
+    program: target,
+  };
+}
+
 export async function debugMesonTarget(build: string, target?: TargetLike): Promise<vscode.DebugSession | null> {
   const targetPath = await resolveExecTargetPath(target);
   if (!targetPath) {
     return;
   }
-  const targetName = await resolveTargetName(target);
 
   try {
-    const debugConfig = {
-      type: 'cppdbg',
-      name: `Debug ${targetName}`,
-      request: 'launch',
-      cwd: build,
-      MIMode: 'gdb',
-      miDebuggerPath: 'gdb',
-      setupCommands: [
-        {
-          description: 'Enable pretty-printing for gdb',
-          text: '-enable-pretty-printing',
-          ignoreFailures: true
-        }
-      ],
-      program: targetPath
-    };
+    let debugConfig = undefined;
+    if (process.platform == 'win32') {
+      debugConfig = makeMSVCConfig(build, targetPath);
+      console.log(debugConfig);
+    } else {
+      debugConfig = makeGDBConfig(build, targetPath);
+    }
     await vscode.debug.startDebugging(this.folder, debugConfig);
     return vscode.debug.activeDebugSession!;
   } catch (e) {

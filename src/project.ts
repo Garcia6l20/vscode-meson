@@ -88,7 +88,7 @@ export class ProjectModel implements ProjectInfo {
         this.resolveBuildFile(meta)
 
         this.targets = meta.targets.filter(t => {
-            return (t.defined_in == this.buildFile) || (t.subproject == this.name);
+            return (path.dirname(t.defined_in) == path.dirname(this.buildFile)) || (t.subproject == this.name);
         });
 
         this.tests = meta.tests.filter(t => {
@@ -129,8 +129,7 @@ export class ProjectModel implements ProjectInfo {
     }
 
     private walkProject(callback: CallableFunction, project?: ProjectModel) {
-        if (!project)
-        {
+        if (!project) {
             project = this;
         }
         let output = [];
@@ -140,7 +139,7 @@ export class ProjectModel implements ProjectInfo {
         });
         return output;
     }
-    
+
     get allTargets(): Targets {
         return this.walkProject(p => {
             return p.targets;
